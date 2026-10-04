@@ -11,7 +11,7 @@ async function getEngineBySerialNumber(req, res) {
       { serial_no: serialNumber },
       { _id: 0, serial_no: 1, model: 1, engine_name: 1, location: 1 },
     ).lean();
-
+    console.log(engine)
     if (!engine) {
       return res.status(404).json({ success: false, msg: "No alternator was found." });
     }
