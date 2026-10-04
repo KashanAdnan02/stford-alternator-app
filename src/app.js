@@ -1,11 +1,24 @@
 const cors = require("cors");
 const express = require("express");
+const helmet = require("helmet");
 const engineRoutes = require("./routes/engineRoutes");
 const userRoutes = require("./routes/userRoutes");
 
 const app = express();
+const allowedOrigins = (process.env.CORS_ORIGINS || "")
+  .split(",")
+  .map((origin) => origin.trim())
+  .filter(Boolean);
 
-app.use(cors());
+app.set("trust proxy", 1);
+app.use(helmet());
+app.use(
+  cors({
+    origin(origin, callback) {
+      callback(null, !origin || allowedOrigins.includes(origin));
+    },
+  }),
+);
 app.use(express.json({ limit: "10kb" }));
 app.get("/", (_req, res) =>
   res.json({
@@ -23,6 +36,10 @@ app.get("/", (_req, res) =>
 app.get("/api/health", (_req, res) => res.json({ success: true }));
 app.use("/api/v2/engine", engineRoutes);
 app.use("/api/v1/user", userRoutes);
+
+app.use((_req, res) => {
+  return res.status(404).json({ success: false, msg: "Endpoint not found." });
+});
 
 app.use((error, _req, res, _next) => {
   if (error instanceof SyntaxError && error.status === 400 && "body" in error) {

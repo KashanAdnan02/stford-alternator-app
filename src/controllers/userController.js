@@ -14,25 +14,29 @@ function publicUser(user) {
 }
 
 async function register(req, res) {
-  const { name, email, phoneNo, password } = req.body;
+  const { name, email, phoneNo, password } = req.body || {};
+  const normalizedEmail = typeof email === "string" ? email.trim().toLowerCase() : "";
+  const validEmail =
+    normalizedEmail.length <= 254 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail);
   if (
     typeof name !== "string" ||
-    typeof email !== "string" ||
     typeof phoneNo !== "string" ||
     typeof password !== "string" ||
     !name.trim() ||
-    !email.trim() ||
+    name.trim().length > 100 ||
+    !validEmail ||
     !phoneNo.trim() ||
-    password.length < 8
+    phoneNo.trim().length > 32 ||
+    password.length < 8 ||
+    Buffer.byteLength(password, "utf8") > 72
   ) {
     return res.status(400).json({
       success: false,
-      msg: "Name, email, phone number, and a password of at least 8 characters are required.",
+      msg: "Enter a valid name, email, phone number, and a password of 8 to 72 bytes.",
     });
   }
 
   try {
-    const normalizedEmail = email.trim().toLowerCase();
     const existingUser = await User.exists({ email: normalizedEmail });
     if (existingUser) {
       return res.status(409).json({ success: false, msg: "Email is already registered." });
@@ -62,8 +66,14 @@ async function register(req, res) {
 }
 
 async function login(req, res) {
-  const { email, password } = req.body;
-  if (typeof email !== "string" || typeof password !== "string" || !email.trim() || !password) {
+  const { email, password } = req.body || {};
+  if (
+    typeof email !== "string" ||
+    typeof password !== "string" ||
+    !email.trim() ||
+    !password ||
+    Buffer.byteLength(password, "utf8") > 72
+  ) {
     return res.status(400).json({ success: false, msg: "Email and password are required." });
   }
 

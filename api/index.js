@@ -1,5 +1,6 @@
 const app = require("../src/app");
 const connectDatabase = require("../src/config/database");
+const validateEnvironment = require("../src/config/validateEnvironment");
 
 module.exports = async (req, res) => {
   try {
@@ -8,10 +9,7 @@ module.exports = async (req, res) => {
       return app(req, res);
     }
 
-    if (!process.env.MONGO_URI || !process.env.JWT_SECRET) {
-      throw new Error("MONGO_URI and JWT_SECRET must be set in the environment.");
-    }
-
+    validateEnvironment();
     await connectDatabase();
     return app(req, res);
   } catch (error) {
