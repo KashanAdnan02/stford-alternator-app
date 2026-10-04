@@ -7,6 +7,19 @@ const app = express();
 
 app.use(cors());
 app.use(express.json({ limit: "10kb" }));
+app.get("/", (_req, res) =>
+  res.json({
+    success: true,
+    msg: "ST Ford Alternator API is running.",
+    endpoints: {
+      health: "/api/health",
+      register: "POST /api/v1/user/register",
+      login: "POST /api/v1/user/login",
+      currentUser: "POST /api/v1/user/me",
+      engine: "GET /api/v2/engine/:serialNumber",
+    },
+  }),
+);
 app.get("/api/health", (_req, res) => res.json({ success: true }));
 app.use("/api/v2/engine", engineRoutes);
 app.use("/api/v1/user", userRoutes);
